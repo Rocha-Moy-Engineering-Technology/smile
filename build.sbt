@@ -1,19 +1,20 @@
 name := "smile"
 
-lazy val scala213 = "2.13.11"
-lazy val scala3 = "3.3.0"
-lazy val supportedScalaVersions = List(scala213, scala3)
+// lazy val scala213 = "2.13.11"
+lazy val scala3 = "3.3.1"
+// lazy val supportedScalaVersions = List(scala213, scala3)
+lazy val supportedScalaVersions = List(scala3)
 
 lazy val commonSettings = Seq(
   // skip packageDoc task on stage
   Compile / packageDoc / mappings := Seq(),
   // always set scala version including Java only modules
-  scalaVersion := scala213,
+  scalaVersion := scala3,
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "3.0.2",
+  version := "3.0.2-RMTC-0.1",
 
   Test / parallelExecution := false,
   autoAPIMappings := true,
@@ -127,9 +128,9 @@ lazy val root = project.in(file("."))
   .settings(publish / skip := true)
   .settings(crossScalaVersions := Nil)
   .settings(
-    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, spark, shell, plot)
+    JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, shell, plot)
   )
-  .aggregate(core, base, mkl, nlp, plot, json, scala, spark, shell)
+  .aggregate(core, base, mkl, nlp, plot, json, scala, shell)
 
 lazy val base = project.in(file("base")).settings(java8Settings: _*)
 
@@ -159,9 +160,9 @@ lazy val scala = project.in(file("scala"))
   .settings(scalaSettings: _*)
   .dependsOn(core, nlp, plot, json)
 
-lazy val spark = project.in(file("spark"))
-  .settings(scalaSettings: _*)
-  .dependsOn(core)
+// lazy val spark = project.in(file("spark"))
+//   .settings(scalaSettings: _*)
+//   .dependsOn(core)
 
 lazy val shell = project.in(file("shell"))
   .settings(scalaSettings: _*)
