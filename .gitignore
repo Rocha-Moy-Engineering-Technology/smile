@@ -7,6 +7,9 @@
 # Intellij
 .idea
 
+# VSCode
+.metals
+
 # Eclipse
 .project
 .settings
