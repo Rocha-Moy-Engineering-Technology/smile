@@ -9,6 +9,7 @@
 
 # VSCode
 .metals
+.bsp
 
 # Eclipse
 .project

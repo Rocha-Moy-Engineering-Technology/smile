@@ -23,7 +23,7 @@ import static smile.math.MathEx.lfactorial;
 
 /**
  * The gamma, digamma, and incomplete gamma functions.
- * 
+ *
  * @author Haifeng Li
  */
 public class Gamma {
@@ -64,62 +64,80 @@ public class Gamma {
      * @param x a real number.
      * @return the function value.
      */
+    // public static double gamma(double z) {
+    //     return Math.sqrt(2 * Math.PI * z) * Math.pow(z / Math.E, z);
+    // }
     public static double gamma(double x) {
-        double xcopy = x;
-        double first = x + LANCZOS_SMALL_GAMMA + 0.5;
-        double second = LANCZOS_COEFF[0];
-        double fg = 0.0;
-
-        if (x >= 0.0) {
-            if (x >= 1.0 && x - (int) x == 0.0) {
-                fg = factorial((int) x - 1);
-            } else {
-                first = pow(first, x + 0.5) * exp(-first);
-                for (int i = 1; i <= LANCZOS_N; i++) {
-                    second += LANCZOS_COEFF[i] / ++xcopy;
-                }
-                fg = first * sqrt(2.0 * PI) * second / x;
-            }
-        } else {
-            fg = -PI / (x * gamma(-x) * sin(PI * x));
+        if (Double.isNaN(x)) {
+            throw new AssertionError("x in gamma(x) is NaN");
         }
-        return fg;
+        return org.apache.commons.math3.special.Gamma.gamma(x);
     }
+    // public static double gamma(double x) {
+    //     double xcopy = x;
+    //     double first = x + LANCZOS_SMALL_GAMMA + 0.5;
+    //     double second = LANCZOS_COEFF[0];
+    //     double fg = 0.0;
+
+    //     if (x >= 0.0) {
+    //         if (x >= 1.0 && x - (int) x == 0.0) {
+    //             fg = factorial((int) x - 1);
+    //         } else {
+    //             first = pow(first, x + 0.5) * exp(-first);
+    //             for (int i = 1; i <= LANCZOS_N; i++) {
+    //                 second += LANCZOS_COEFF[i] / ++xcopy;
+    //             }
+    //             fg = first * sqrt(2.0 * PI) * second / x;
+    //         }
+    //     } else {
+    //         fg = -PI / (x * gamma(-x) * sin(PI * x));
+    //     }
+    //     return fg;
+    // }
 
     /**
      * The log of the Gamma function. Lanczos approximation (6 terms)
      * @param x a real number.
      * @return the function value.
      */
+    // public static double lgamma(double z) {
+    //     return 0.5 * Math.log(2 * Math.PI) + (z - 0.5) * Math.log(z) - z;
+    // }
     public static double lgamma(double x) {
-        double xcopy = x;
-        double fg = 0.0;
-        double first = x + LANCZOS_SMALL_GAMMA + 0.5;
-        double second = LANCZOS_COEFF[0];
-
-        if (x >= 0.0) {
-            if (x >= 1.0 && x - (int) x == 0.0) {
-                fg = lfactorial((int) x - 1);
-            } else {
-                first -= (x + 0.5) * log(first);
-                for (int i = 1; i <= LANCZOS_N; i++) {
-                    second += LANCZOS_COEFF[i] / ++xcopy;
-                }
-                fg = log(sqrt(2.0 * PI) * second / x) - first;
-            }
-        } else {
-            fg = PI / (gamma(1.0 - x) * sin(PI * x));
-
-            if (Double.isFinite(fg)) {
-                if (fg < 0) {
-                    throw new IllegalArgumentException("The gamma function is negative: " + fg);
-                } else {
-                    fg = log(fg);
-                }
-            }
+        if (Double.isNaN(x)) {
+            throw new AssertionError("x in lgamma(x) is NaN");
         }
-        return fg;
+        return org.apache.commons.math3.special.Gamma.logGamma(x);
     }
+    // public static double lgamma(double x) {
+    //     double xcopy = x;
+    //     double fg = 0.0;
+    //     double first = x + LANCZOS_SMALL_GAMMA + 0.5;
+    //     double second = LANCZOS_COEFF[0];
+
+    //     if (x >= 0.0) {
+    //         if (x >= 1.0 && x - (int) x == 0.0) {
+    //             fg = lfactorial((int) x - 1);
+    //         } else {
+    //             first -= (x + 0.5) * log(first);
+    //             for (int i = 1; i <= LANCZOS_N; i++) {
+    //                 second += LANCZOS_COEFF[i] / ++xcopy;
+    //             }
+    //             fg = log(sqrt(2.0 * PI) * second / x) - first;
+    //         }
+    //     } else {
+    //         fg = PI / (gamma(1.0 - x) * sin(PI * x));
+
+    //         if (Double.isFinite(fg)) {
+    //             if (fg < 0) {
+    //                 throw new IllegalArgumentException("The gamma function is negative: " + fg);
+    //             } else {
+    //                 fg = log(fg);
+    //             }
+    //         }
+    //     }
+    //     return fg;
+    // }
 
     /**
      * Regularized Incomplete Gamma Function
@@ -279,62 +297,71 @@ public class Gamma {
      * @param x a real number.
      * @return the function value.
      */
+    // public static double digamma(double z) {
+    //     return Math.log(z) - 1.0 / (2.0 * z) - 1.0 / (12.0 * z * z);
+    // }
     public static double digamma(double x) {
-        final double[][] C7 = {
-            {
-                1.3524999667726346383e4, 4.5285601699547289655e4,
-                4.5135168469736662555e4, 1.8529011818582610168e4,
-                3.3291525149406935532e3, 2.4068032474357201831e2,
-                5.1577892000139084710, 6.2283506918984745826e-3
-            },
-            {
-                6.9389111753763444376e-7, 1.9768574263046736421e4,
-                4.1255160835353832333e4, 2.9390287119932681918e4,
-                9.0819666074855170271e3, 1.2447477785670856039e3,
-                6.7429129516378593773e1, 1.0
-            }
-        };
-
-        final double[][] C4 = {
-            {
-                -2.728175751315296783e-15, -6.481571237661965099e-1,
-                -4.486165439180193579, -7.016772277667586642,
-                -2.129404451310105168
-            },
-            {
-                7.777885485229616042, 5.461177381032150702e1,
-                8.929207004818613702e1, 3.227034937911433614e1,
-                1.0
-            }
-        };
-
-        double prodPj = 0.0;
-        double prodQj = 0.0;
-        double digX = 0.0;
-
-        if (x >= 3.0) {
-            double x2 = 1.0 / (x * x);
-            for (int j = 4; j >= 0; j--) {
-                prodPj = prodPj * x2 + C4[0][j];
-                prodQj = prodQj * x2 + C4[1][j];
-            }
-            digX = log(x) - (0.5 / x) + (prodPj / prodQj);
-
-        } else if (x >= 0.5) {
-            final double X0 = 1.46163214496836234126;
-            for (int j = 7; j >= 0; j--) {
-                prodPj = x * prodPj + C7[0][j];
-                prodQj = x * prodQj + C7[1][j];
-            }
-            digX = (x - X0) * (prodPj / prodQj);
-
-        } else {
-            double f = (1.0 - x) - floor(1.0 - x);
-            digX = digamma(1.0 - x) + PI / tan(PI * f);
+        if (Double.isNaN(x)) {
+            throw new AssertionError("x in digamma(x) is NaN");
         }
-
-        return digX;
+        return org.apache.commons.math3.special.Gamma.digamma(x);
     }
+    // public static double digamma(double x) {
+    //     final double[][] C7 = {
+    //         {
+    //             1.3524999667726346383e4, 4.5285601699547289655e4,
+    //             4.5135168469736662555e4, 1.8529011818582610168e4,
+    //             3.3291525149406935532e3, 2.4068032474357201831e2,
+    //             5.1577892000139084710, 6.2283506918984745826e-3
+    //         },
+    //         {
+    //             6.9389111753763444376e-7, 1.9768574263046736421e4,
+    //             4.1255160835353832333e4, 2.9390287119932681918e4,
+    //             9.0819666074855170271e3, 1.2447477785670856039e3,
+    //             6.7429129516378593773e1, 1.0
+    //         }
+    //     };
+
+    //     final double[][] C4 = {
+    //         {
+    //             -2.728175751315296783e-15, -6.481571237661965099e-1,
+    //             -4.486165439180193579, -7.016772277667586642,
+    //             -2.129404451310105168
+    //         },
+    //         {
+    //             7.777885485229616042, 5.461177381032150702e1,
+    //             8.929207004818613702e1, 3.227034937911433614e1,
+    //             1.0
+    //         }
+    //     };
+
+    //     double prodPj = 0.0;
+    //     double prodQj = 0.0;
+    //     double digX = 0.0;
+
+    //     if (x >= 3.0) {
+    //         double x2 = 1.0 / (x * x);
+    //         for (int j = 4; j >= 0; j--) {
+    //             prodPj = prodPj * x2 + C4[0][j];
+    //             prodQj = prodQj * x2 + C4[1][j];
+    //         }
+    //         digX = log(x) - (0.5 / x) + (prodPj / prodQj);
+
+    //     } else if (x >= 0.5) {
+    //         final double X0 = 1.46163214496836234126;
+    //         for (int j = 7; j >= 0; j--) {
+    //             prodPj = x * prodPj + C7[0][j];
+    //             prodQj = x * prodQj + C7[1][j];
+    //         }
+    //         digX = (x - X0) * (prodPj / prodQj);
+
+    //     } else {
+    //         double f = (1.0 - x) - floor(1.0 - x);
+    //         digX = digamma(1.0 - x) + PI / tan(PI * f);
+    //     }
+
+    //     return digX;
+    // }
 
     /**
      * The inverse of regularized incomplete gamma function.
