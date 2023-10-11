@@ -71,7 +71,13 @@ public class Gamma {
         if (Double.isNaN(x)) {
             throw new AssertionError("x in gamma(x) is NaN");
         }
-        return org.apache.commons.math3.special.Gamma.gamma(x);
+        // double out = org.apache.commons.math3.special.Gamma.gamma(x);
+        double out = Math.exp(org.apache.commons.math3.special.Gamma.logGamma(x));
+        if (Double.isNaN(out)) {
+            throw new AssertionError("gamma(x) spitout NaN" + " " + x);
+        }
+        // System.out.println("gamma(x) is" + " " + out);
+        return out;
     }
     // public static double gamma(double x) {
     //     double xcopy = x;
@@ -107,7 +113,12 @@ public class Gamma {
         if (Double.isNaN(x)) {
             throw new AssertionError("x in lgamma(x) is NaN");
         }
-        return org.apache.commons.math3.special.Gamma.logGamma(x);
+        double out = org.apache.commons.math3.special.Gamma.logGamma(x);
+        if (Double.isNaN(out)) {
+            throw new AssertionError("lgamma(x) spitout NaN" + " " + x);
+        }
+        // System.out.println("lgamma(x) is" + " " + out);
+        return out;
     }
     // public static double lgamma(double x) {
     //     double xcopy = x;
@@ -304,7 +315,12 @@ public class Gamma {
         if (Double.isNaN(x)) {
             throw new AssertionError("x in digamma(x) is NaN");
         }
-        return org.apache.commons.math3.special.Gamma.digamma(x);
+        double out = org.apache.commons.math3.special.Gamma.digamma(x);
+        if (Double.isNaN(out)) {
+            throw new AssertionError("digamma(x) spitout NaN" + " " + x);
+        }
+        // System.out.println("digamma(x) is" + " " + out);
+        return out;
     }
     // public static double digamma(double x) {
     //     final double[][] C7 = {

@@ -114,6 +114,12 @@ public class ExponentialFamilyMixture extends Mixture {
                 Component c = components[i];
 
                 for (int j = 0; j < n; j++) {
+                    if (Double.isNaN(c.priori) || Double.isInfinite(c.priori) || c.priori <= 0.0) {
+                       throw new IllegalArgumentException("c.priori : " + c.priori);
+                    }
+                    if (Double.isNaN(c.distribution.p(x[j])) || Double.isInfinite(c.distribution.p(x[j])) || c.distribution.p(x[j]) < 0.0) {
+                          throw new IllegalArgumentException("c.distribution.p(x[j]) : " + c.distribution.p(x[j]) + " " + x[j]);
+                    }
                     posteriori[i][j] = c.priori * c.distribution.p(x[j]);
                 }
             }
@@ -126,6 +132,11 @@ public class ExponentialFamilyMixture extends Mixture {
                     p += posteriori[i][j];
                 }
 
+                if (Double.isNaN(p) || Double.isInfinite(p) || p <= 0.0) {
+                    return new ExponentialFamilyMixture(L, x.length, components);
+                    // throw new IllegalArgumentException("Invalid p: " + p);
+                }
+
                 for (int i = 0; i < k; i++) {
                     posteriori[i][j] /= p;
                 }
@@ -135,6 +146,7 @@ public class ExponentialFamilyMixture extends Mixture {
                     for (int i = 0; i < k; i++) {
                         posteriori[i][j] *= (1 + gamma * MathEx.log2(posteriori[i][j]));
                         if (Double.isNaN(posteriori[i][j]) || posteriori[i][j] < 0.0) {
+                            System.out.println("Regularization (1 + gamma * MathEx.log2(posteriori[i][j])) yielded: " + posteriori[i][j]);
                             posteriori[i][j] = 0.0;
                         }
                     }

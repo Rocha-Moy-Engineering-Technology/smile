@@ -19,6 +19,7 @@ package smile.stat.distribution;
 
 import smile.math.MathEx;
 import smile.math.special.Gamma;
+import java.util.Random;
 
 /**
  * The Gamma distribution is a continuous probability distributions with
@@ -65,23 +66,30 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
     private final double logGammaK;
     /** Shannon entropy. */
     private final double entropy;
+    private final org.apache.commons.math3.distribution.GammaDistribution trueDist;
 
     /**
      * Constructor.
      * @param shape the shape parameter.
      * @param scale the scale parameter.
      */
+    public void checkArguments() {
+        if (Double.isNaN(k) || Double.isInfinite(k) || k <= 0) {
+            throw new IllegalArgumentException("Invalid k: " + k);
+        }
+
+        if (Double.isNaN(theta) || Double.isInfinite(theta) || theta <= 0) {
+            throw new IllegalArgumentException("Invalid theta: " + theta);
+        }
+    }
+
     public GammaDistribution(double shape, double scale) {
-        if (shape <= 0) {
-            throw new IllegalArgumentException("Invalid shape: " + shape);
-        }
-
-        if (scale <= 0) {
-            throw new IllegalArgumentException("Invalid scale: " + scale);
-        }
-
+        trueDist = new org.apache.commons.math3.distribution.GammaDistribution(shape, scale);
         theta = scale;
         k = shape;
+
+        // System.out.println("k: " + k + " theta: " + theta);
+        checkArguments();
 
         logTheta = Math.log(theta);
         thetaGammaK = theta * Gamma.gamma(k);
@@ -94,6 +102,15 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
      * @param data the training data.
      * @return the distribution.
      */
+    public static double vary(double x) {
+        Random rand = new Random();
+        double r = rand.nextDouble();
+        if (r < 0.5) {
+            return (1.0 + r) * x;
+        } else {
+            return r * x;
+        }
+    }
     public static GammaDistribution fit(double[] data) {
         for (double datum : data) {
             if (datum <= 0) {
@@ -113,7 +130,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
 
         double shape = (3 - s + Math.sqrt((MathEx.pow2(s - 3) + 24 * s))) / (12 * s);
         double scale = mu / shape;
-        return new GammaDistribution(shape, scale);
+        return new GammaDistribution(vary(shape), vary(scale));
     }
 
     @Override
@@ -151,56 +168,82 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
      */
     @Override
     public double rand() {
-        if (k - Math.floor(k) > MathEx.EPSILON) {
-            throw new IllegalArgumentException("Gamma random number generator support only integer shape parameter.");
-        }
-
-        double r = 0.0;
-
-        for (int i = 0; i < k; i++) {
-            r += Math.log(MathEx.random());
-        }
-
-        r *= -theta;
-
-        return r;
+        return trueDist.sample();
     }
+    // public double rand() {
+    //     if (k - Math.floor(k) > MathEx.EPSILON) {
+    //         throw new IllegalArgumentException("Gamma random number generator support only integer shape parameter.");
+    //     }
+
+    //     double r = 0.0;
+
+    //     for (int i = 0; i < k; i++) {
+    //         r += Math.log(MathEx.random());
+    //     }
+
+    //     r *= -theta;
+
+    //     return r;
+    // }
 
     @Override
     public double p(double x) {
-        if (x < 0) {
-            return 0.0;
-        } else {
-            return Math.pow(x / theta, k - 1) * Math.exp(-x / theta) / thetaGammaK;
-        }
+        return Math.exp(logp(x));
     }
+    // public double p(double x) {
+    //     checkArguments();
+    //     if (x < 0) {
+    //         return 0.0;
+    //     } else {
+    //         double out = Math.pow(x / theta, k - 1) * Math.exp(-x / theta) / thetaGammaK;
+    //         if (Double.isNaN(out) || Double.isInfinite(out) || out < 0.0) {
+    //             System.out.println(x);
+    //             System.out.println(
+    //                 theta + " " + k + " " + thetaGammaK);
+    //             System.out.println(
+    //                 Math.pow(x / theta, k - 1) + " " + Math.exp(-x / theta) + " " + Math.exp(-x / theta) / thetaGammaK
+    //             );
+    //             System.out.println();
+    //         }
+    //         return out;
+    //     }
+    // }
 
     @Override
     public double logp(double x) {
-        if (x < 0) {
-            return Double.NEGATIVE_INFINITY;
-        } else {
-            return (k - 1) * Math.log(x) - x / theta - k * logTheta - logGammaK;
-        }
+        return trueDist.logDensity(x);
     }
+    // public double logp(double x) {
+    //     if (x < 0) {
+    //         return Double.NEGATIVE_INFINITY;
+    //     } else {
+    //         return (k - 1) * Math.log(x) - x / theta - k * logTheta - logGammaK;
+    //     }
+    // }
 
     @Override
     public double cdf(double x) {
-        if (x < 0) {
-            return 0.0;
-        } else {
-            return Gamma.regularizedIncompleteGamma(k, x / theta);
-        }
+        return trueDist.cumulativeProbability(x);
     }
+    // public double cdf(double x) {
+    //     if (x < 0) {
+    //         return 0.0;
+    //     } else {
+    //         return Gamma.regularizedIncompleteGamma(k, x / theta);
+    //     }
+    // }
 
     @Override
     public double quantile(double p) {
-        if (p < 0.0 || p > 1.0) {
-            throw new IllegalArgumentException("Invalid p: " + p);
-        }
-
-        return Gamma.inverseRegularizedIncompleteGamma(k, p) * theta;
+        return trueDist.inverseCumulativeProbability(p);
     }
+    // public double quantile(double p) {
+    //     if (p < 0.0 || p > 1.0) {
+    //         throw new IllegalArgumentException("Invalid p: " + p);
+    //     }
+
+    //     return Gamma.inverseRegularizedIncompleteGamma(k, p) * theta;
+    // }
 
     @Override
     public Mixture.Component M(double[] x, double[] posteriori) {
@@ -213,7 +256,17 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
             mean += x[i] * posteriori[i];
         }
 
+        if (Double.isNaN(alpha) || Double.isInfinite(alpha) || alpha <= 0.0) {
+            return new Mixture.Component(alpha, GammaDistribution.fit(x));
+            // throw new IllegalArgumentException("Invalid alpha: " + alpha);
+        }
+
         mean /= alpha;
+
+        if (Double.isNaN(mean) || Double.isInfinite(mean) || mean <= 0.0) {
+            return new Mixture.Component(alpha, GammaDistribution.fit(x));
+            // throw new IllegalArgumentException("Invalid mean: " + mean);
+        }
 
         for (int i = 0; i < x.length; i++) {
             double d = x[i] - mean;
@@ -222,7 +275,23 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
 
         variance /= alpha;
 
-        return new Mixture.Component(alpha, new GammaDistribution(mean * mean / variance, variance / mean));
+        if (Double.isNaN(variance) || Double.isInfinite(variance) || variance <= 0.0) {
+            return new Mixture.Component(alpha, GammaDistribution.fit(x));
+            // throw new IllegalArgumentException("Invalid variance: " + variance);
+        }
+
+        double shape = mean * mean / variance;
+        double scale = variance / mean;
+
+        if (Double.isNaN(shape) || Double.isInfinite(shape) || shape <= 0.0) {
+            throw new IllegalArgumentException("Invalid shape: " + shape);
+        }
+
+        if (Double.isNaN(scale) || Double.isInfinite(scale) || scale <= 0.0) {
+            throw new IllegalArgumentException("Invalid scale: " + scale);
+        }
+
+        return new Mixture.Component(alpha, new GammaDistribution(shape, scale));
     }
 }
 
