@@ -67,7 +67,7 @@ import smile.math.special.Erf;
  * <li> The Student's t-distribution <code>t(&nu;)</code> is approximately normal
  * <code>N(0, 1)</code> when &nu; is large.
  * </ul>
- * 
+ *
  * @author Haifeng Li
  */
 public class GaussianDistribution extends AbstractDistribution implements ExponentialFamily {
@@ -87,6 +87,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     private final double entropy;
     /** The constant factor in PDF. */
     private final double pdfConstant;
+    private final org.apache.commons.math3.distribution.NormalDistribution trueDist;
 
     /**
      * Constructor
@@ -96,6 +97,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     public GaussianDistribution(double mu, double sigma) {
         this.mu = mu;
         this.sigma = sigma;
+        trueDist = new org.apache.commons.math3.distribution.NormalDistribution(this.mu, this.sigma);
         variance = sigma * sigma;
 
         entropy = Math.log(sigma) + LOG2PIE_2;
@@ -110,7 +112,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     public static GaussianDistribution fit(double[] data) {
         double mu = MathEx.mean(data);
         double sigma = MathEx.sd(data);
-        return new GaussianDistribution(mu, sigma);
+        return new GaussianDistribution(Mixture.vary(mu), Mixture.vary(sigma));
     }
 
     /**
@@ -162,26 +164,29 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
      */
     @Override
     public double rand() {
-        double z0, x, y, r, z;
-
-        if (Double.isNaN(z1)) {
-            do {
-                x = MathEx.random(-1, 1);
-                y = MathEx.random(-1, 1);
-                r = x * x + y * y;
-            } while (r >= 1.0);
-
-            z = Math.sqrt(-2.0 * Math.log(r) / r);
-            z1 = x * z;
-            z0 = y * z;
-        } else {
-            z0 = z1;
-            z1 = Double.NaN;
-        }
-
-        return mu + sigma * z0;
+        return trueDist.sample();
     }
-    
+    // public double rand() {
+    //     double z0, x, y, r, z;
+
+    //     if (Double.isNaN(z1)) {
+    //         do {
+    //             x = MathEx.random(-1, 1);
+    //             y = MathEx.random(-1, 1);
+    //             r = x * x + y * y;
+    //         } while (r >= 1.0);
+
+    //         z = Math.sqrt(-2.0 * Math.log(r) / r);
+    //         z1 = x * z;
+    //         z0 = y * z;
+    //     } else {
+    //         z0 = z1;
+    //         z1 = Double.NaN;
+    //     }
+
+    //     return mu + sigma * z0;
+    // }
+
     /**
      * Generates a Gaussian random number with the inverse CDF method.
      * @return a random number.
@@ -211,7 +216,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
         while (u == 0.0) {
             u = MathEx.random();
         }
-        
+
         y = u - 0.5;
 
         if (Math.abs(y) < 0.42) {
@@ -230,49 +235,58 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
                 x = -(x);
             }
         }
-        
+
         return mu + sigma * x;
     }
 
     @Override
     public double p(double x) {
-        if (sigma == 0) {
-            if (x == mu) {
-                return 1.0;
-            } else {
-                return 0.0;
-            }
-        }
-
         return Math.exp(logp(x));
     }
+    // public double p(double x) {
+    //     if (sigma == 0) {
+    //         if (x == mu) {
+    //             return 1.0;
+    //         } else {
+    //             return 0.0;
+    //         }
+    //     }
+
+    //     return Math.exp(logp(x));
+    // }
 
     @Override
     public double logp(double x) {
-        if (sigma == 0) {
-            if (x == mu) {
-                return 0.0;
-            } else {
-                return Double.NEGATIVE_INFINITY;
-            }
-        }
-
-        double d = x - mu;
-        return -0.5 * d * d / variance - pdfConstant;
+        return trueDist.logDensity(x);
     }
+    // public double logp(double x) {
+    //     if (sigma == 0) {
+    //         if (x == mu) {
+    //             return 0.0;
+    //         } else {
+    //             return Double.NEGATIVE_INFINITY;
+    //         }
+    //     }
+
+    //     double d = x - mu;
+    //     return -0.5 * d * d / variance - pdfConstant;
+    // }
 
     @Override
     public double cdf(double x) {
-        if (sigma == 0) {
-            if (x < mu) {
-                return 0.0;
-            } else {
-                return 1.0;
-            }
-        }
-
-        return 0.5 * Erf.erfc(-0.707106781186547524 * (x - mu) / sigma);
+        return trueDist.cumulativeProbability(x);
     }
+    // public double cdf(double x) {
+    //     if (sigma == 0) {
+    //         if (x < mu) {
+    //             return 0.0;
+    //         } else {
+    //             return 1.0;
+    //         }
+    //     }
+
+    //     return 0.5 * Erf.erfc(-0.707106781186547524 * (x - mu) / sigma);
+    // }
 
     /**
      * The quantile, the probability to the left of quantile(p) is p. This is
@@ -283,19 +297,22 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
      */
     @Override
     public double quantile(double p) {
-        if (p < 0.0 || p > 1.0) {
-            throw new IllegalArgumentException("Invalid p: " + p);
-        }
-
-        if (sigma == 0.0) {
-            if (p < 1.0) {
-                return mu - 1E-10;
-            } else {
-                return mu;
-            }
-        }
-        return -1.41421356237309505 * sigma * Erf.inverfc(2.0 * p) + mu;
+        return trueDist.inverseCumulativeProbability(p);
     }
+    // public double quantile(double p) {
+    //     if (p < 0.0 || p > 1.0) {
+    //         throw new IllegalArgumentException("Invalid p: " + p);
+    //     }
+
+    //     if (sigma == 0.0) {
+    //         if (p < 1.0) {
+    //             return mu - 1E-10;
+    //         } else {
+    //             return mu;
+    //         }
+    //     }
+    //     return -1.41421356237309505 * sigma * Erf.inverfc(2.0 * p) + mu;
+    // }
 
     @Override
     public Mixture.Component M(double[] x, double[] posteriori) {
@@ -308,7 +325,18 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
             mean += x[i] * posteriori[i];
         }
 
+        if (Double.isNaN(alpha) || Double.isInfinite(alpha) || alpha <= 0.0) {
+            return new Mixture.Component(0.0, GaussianDistribution.fit(x));
+            // throw new IllegalArgumentException("Invalid alpha: " + alpha);
+        }
+
         mean /= alpha;
+
+        if (Double.isNaN(mean) || Double.isInfinite(mean) || mean <= 0.0) {
+            return new Mixture.Component(alpha, GaussianDistribution.fit(x));
+            // throw new IllegalArgumentException("Invalid mean: " + mean);
+        }
+
 
         for (int i = 0; i < x.length; i++) {
             double d = x[i] - mean;
@@ -316,6 +344,11 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
         }
 
         sd = Math.sqrt(sd / alpha);
+
+        if (Double.isNaN(sd) || Double.isInfinite(sd) || sd <= 0.0) {
+            return new Mixture.Component(alpha, GaussianDistribution.fit(x));
+            // throw new IllegalArgumentException("Invalid sd: " + sd);
+        }
 
         return new Mixture.Component(alpha, new GaussianDistribution(mean, sd));
     }

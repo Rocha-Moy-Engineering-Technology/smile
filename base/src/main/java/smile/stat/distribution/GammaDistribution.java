@@ -102,15 +102,6 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
      * @param data the training data.
      * @return the distribution.
      */
-    public static double vary(double x) {
-        Random rand = new Random();
-        double r = rand.nextDouble();
-        if (r < 0.5) {
-            return (1.0 + r) * x;
-        } else {
-            return r * x;
-        }
-    }
     public static GammaDistribution fit(double[] data) {
         for (double datum : data) {
             if (datum <= 0) {
@@ -130,7 +121,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
 
         double shape = (3 - s + Math.sqrt((MathEx.pow2(s - 3) + 24 * s))) / (12 * s);
         double scale = mu / shape;
-        return new GammaDistribution(vary(shape), vary(scale));
+        return new GammaDistribution(Mixture.vary(shape), Mixture.vary(scale));
     }
 
     @Override
@@ -257,7 +248,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
         }
 
         if (Double.isNaN(alpha) || Double.isInfinite(alpha) || alpha <= 0.0) {
-            return new Mixture.Component(alpha, GammaDistribution.fit(x));
+            return new Mixture.Component(0.0, GammaDistribution.fit(x));
             // throw new IllegalArgumentException("Invalid alpha: " + alpha);
         }
 

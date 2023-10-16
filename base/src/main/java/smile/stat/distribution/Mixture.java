@@ -19,6 +19,7 @@ package smile.stat.distribution;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.stream.Collectors;
 import smile.math.MathEx;
 
@@ -42,6 +43,16 @@ import smile.math.MathEx;
  */
 public class Mixture extends AbstractDistribution {
     private static final long serialVersionUID = 2L;
+
+    public static double vary(double x) {
+        Random rand = new Random();
+        double r = rand.nextDouble();
+        if (r < 0.5) {
+            return (1.0 + r) * x;
+        } else {
+            return r * x;
+        }
+    }
 
     /**
      * A component in the mixture distribution is defined by a distribution
@@ -157,7 +168,7 @@ public class Mixture extends AbstractDistribution {
     public double entropy() {
         throw new UnsupportedOperationException("Mixture does not support entropy()");
     }
-    
+
     @Override
     public double p(double x) {
         double p = 0.0;
@@ -190,6 +201,7 @@ public class Mixture extends AbstractDistribution {
         double p = 0.0;
         for (Component g : components) {
             p += g.priori;
+            // System.out.println(r + " " + p); //tmp
             if (r <= p)
                 return g.distribution.rand();
         }
