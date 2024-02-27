@@ -223,8 +223,9 @@ public class LinearModel implements DataFrameRegression {
 				pvalue = 2 * (1.0 - tDist.cumulativeProbability(Math.abs(tStatistic))); // Two-tailed p-value
 			}
 		} else {
-			String msg = F <= 0.0 ? "R2 is not positive" : "the linear system is under-determined";
-			logger.warn("Skip calculating p-value: {}.", msg);
+			// String msg = F <= 0.0 ? "R2 is not positive" : "the linear system is
+			// under-determined";
+			// logger.warn("Skip calculating p-value: {}.", msg);
 			pvalue = Double.NaN;
 		}
 	}
