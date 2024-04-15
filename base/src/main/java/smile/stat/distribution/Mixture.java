@@ -24,259 +24,266 @@ import java.util.stream.Collectors;
 import smile.math.MathEx;
 
 /**
- * A finite mixture model is a probabilistic model for density estimation
- * using a mixture distribution. A mixture model can be regarded as a type of
+ * A finite mixture model is a probabilistic model for density estimation using
+ * a mixture distribution. A mixture model can be regarded as a type of
  * unsupervised learning or clustering.
  * <p>
- * The Expectation-maximization algorithm can be used to compute the
- * parameters of a parametric mixture model distribution. The EM algorithm is
- * a method for finding maximum likelihood estimates of parameters, where the
- * model depends on unobserved latent variables. EM is an iterative method which
- * alternates between performing an expectation (E) step, which computes the
- * expectation of the log-likelihood evaluated using the current estimate for
- * the latent variables, and a maximization (M) step, which computes parameters
- * maximizing the expected log-likelihood found on the E step. These parameter
- * estimates are then used to determine the distribution of the latent variables
- * in the next E step.
+ * The Expectation-maximization algorithm can be used to compute the parameters
+ * of a parametric mixture model distribution. The EM algorithm is a method for
+ * finding maximum likelihood estimates of parameters, where the model depends
+ * on unobserved latent variables. EM is an iterative method which alternates
+ * between performing an expectation (E) step, which computes the expectation of
+ * the log-likelihood evaluated using the current estimate for the latent
+ * variables, and a maximization (M) step, which computes parameters maximizing
+ * the expected log-likelihood found on the E step. These parameter estimates
+ * are then used to determine the distribution of the latent variables in the
+ * next E step.
  *
  * @author Haifeng Li
  */
 public class Mixture extends AbstractDistribution {
-    private static final long serialVersionUID = 2L;
+	private static final long serialVersionUID = 2L;
 
-    public static double vary(double x) {
-        Random rand = new Random();
-        double r = rand.nextDouble();
-        if (r < 0.5) {
-            return (1.0 + r) * x;
-        } else {
-            return r * x;
-        }
-    }
+	public static double vary(double x) {
+		Random rand = new Random();
+		double r = rand.nextDouble();
+		if (r < 0.5) {
+			return (1.0 + r) * x;
+		} else {
+			return r * x;
+		}
+	}
 
-    /**
-     * A component in the mixture distribution is defined by a distribution
-     * and its weight in the mixture.
-     */
-    public static class Component implements Serializable {
-        private static final long serialVersionUID = 2L;
-        /**
-         * The priori probability of component.
-         */
-        public final double priori;
+	/**
+	 * A component in the mixture distribution is defined by a distribution and its
+	 * weight in the mixture.
+	 */
+	public static class Component implements Serializable {
+		private static final long serialVersionUID = 2L;
+		/**
+		 * The priori probability of component.
+		 */
+		public final double priori;
 
-        /**
-         * The distribution of component.
-         */
-        public final Distribution distribution;
+		/**
+		 * The distribution of component.
+		 */
+		public final Distribution distribution;
 
-        /**
-         * Constructor.
-         * @param priori the priori probability of component.
-         * @param distribution the distribution of component.
-         */
-        public Component(double priori, Distribution distribution) {
-            this.priori = priori;
-            this.distribution = distribution;
-        }
-    }
+		/**
+		 * Constructor.
+		 *
+		 * @param priori       the priori probability of component.
+		 * @param distribution the distribution of component.
+		 */
+		public Component(double priori, Distribution distribution) {
+			this.priori = priori;
+			this.distribution = distribution;
+		}
+	}
 
-    /** The components of finite mixture model. */
-    public final Component[] components;
+	/** The components of finite mixture model. */
+	public final Component[] components;
 
-    /**
-     * Constructor.
-     * @param components a list of distributions.
-     */
-    public Mixture(Component... components) {
-        if (components.length == 0) {
-            throw new IllegalStateException("Empty mixture!");
-        }
+	/**
+	 * Constructor.
+	 *
+	 * @param components a list of distributions.
+	 */
+	public Mixture(Component... components) {
+		if (components.length == 0) {
+			throw new IllegalStateException("Empty mixture!");
+		}
 
-        double sum = 0.0;
-        for (Component component : components) {
-            sum += component.priori;
-        }
+		double sum = 0.0;
+		for (Component component : components) {
+			sum += component.priori;
+		}
 
-        if (Math.abs(sum - 1.0) > 1E-3) {
-            throw new IllegalArgumentException("The sum of priori is not equal to 1.");
-        }
+		if (Math.abs(sum - 1.0) > 1E-3) {
+			throw new IllegalArgumentException("The sum of priori is not equal to 1.");
+		}
 
-        this.components = components;
-    }
+		this.components = components;
+	}
 
-    /**
-     * Returns the posteriori probabilities.
-     * @param x a real value.
-     * @return the posteriori probabilities.
-     */
-    public double[] posteriori(double x) {
-        int k = components.length;
-        double[] prob = new double[k];
-        for (int i = 0; i < k; i++) {
-            Component c = components[i];
-            prob[i] = c.priori * c.distribution.p(x);
-        }
+	/**
+	 * Returns the posteriori probabilities.
+	 *
+	 * @param x a real value.
+	 * @return the posteriori probabilities.
+	 */
+	public double[] posteriori(double x) {
+		int k = components.length;
+		double[] prob = new double[k];
+		for (int i = 0; i < k; i++) {
+			Component c = components[i];
+			prob[i] = c.priori * c.distribution.p(x);
+		}
 
-        double p = MathEx.sum(prob);
-        for (int i = 0; i < k; i++) {
-            prob[i] /= p;
-        }
-        return prob;
-    }
+		double p = MathEx.sum(prob);
+		for (int i = 0; i < k; i++) {
+			prob[i] /= p;
+		}
+		return prob;
+	}
 
-    /**
-     * Returns the index of component with maximum a posteriori probability.
-     * @param x an integer value.
-     * @return the index of component with maximum a posteriori probability.
-     */
-    public int map(double x) {
-        int k = components.length;
-        double[] prob = new double[k];
-        for (int i = 0; i < k; i++) {
-            Component c = components[i];
-            prob[i] = c.priori * c.distribution.p(x);
-        }
+	/**
+	 * Returns the index of component with maximum a posteriori probability.
+	 *
+	 * @param x an integer value.
+	 * @return the index of component with maximum a posteriori probability.
+	 */
+	public int map(double x) {
+		int k = components.length;
+		double[] prob = new double[k];
+		for (int i = 0; i < k; i++) {
+			Component c = components[i];
+			prob[i] = c.priori * c.distribution.p(x);
+		}
 
-        return MathEx.whichMax(prob);
-    }
+		return MathEx.whichMax(prob);
+	}
 
-    @Override
-    public double mean() {
-        double mu = 0.0;
+	@Override
+	public double mean() {
+		double mu = 0.0;
 
-        for (Component c : components)
-            mu += c.priori * c.distribution.mean();
+		for (Component c : components)
+			mu += c.priori * c.distribution.mean();
 
-        return mu;
-    }
+		return mu;
+	}
 
-    @Override
-    public double variance() {
-        double variance = 0.0;
+	@Override
+	public double variance() {
+		double variance = 0.0;
 
-        for (Component c : components)
-            variance += c.priori * c.priori * c.distribution.variance();
+		for (Component c : components)
+			variance += c.priori * c.priori * c.distribution.variance();
 
-        return variance;
-    }
+		return variance;
+	}
 
-    /**
-     * Shannon entropy. Not supported.
-     */
-    @Override
-    public double entropy() {
-        throw new UnsupportedOperationException("Mixture does not support entropy()");
-    }
+	/**
+	 * Shannon entropy. Not supported.
+	 */
+	@Override
+	public double entropy() {
+		throw new UnsupportedOperationException("Mixture does not support entropy()");
+	}
 
-    @Override
-    public double p(double x) {
-        double p = 0.0;
+	@Override
+	public double p(double x) {
+		double p = 0.0;
 
-        for (Component c : components)
-            p += c.priori * c.distribution.p(x);
+		for (Component c : components)
+			p += c.priori * c.distribution.p(x);
 
-        return p;
-    }
+		return p;
+	}
 
-    @Override
-    public double logp(double x) {
-        return Math.log(p(x));
-    }
+	@Override
+	public double logp(double x) {
+		return Math.log(p(x));
+	}
 
-    @Override
-    public double cdf(double x) {
-        double p = 0.0;
+	@Override
+	public double cdf(double x) {
+		double p = 0.0;
 
-        for (Component c : components)
-            p += c.priori * c.distribution.cdf(x);
+		for (Component c : components)
+			p += c.priori * c.distribution.cdf(x);
 
-        return p;
-    }
+		return p;
+	}
 
-    @Override
-    public double rand() {
-        double r = MathEx.random();
+	@Override
+	public double rand() {
+		double r = MathEx.random();
 
-        double p = 0.0;
-        for (Component g : components) {
-            p += g.priori;
-            // System.out.println(r + " " + p); //tmp
-            if (r <= p)
-                return g.distribution.rand();
-        }
+		double p = 0.0;
+		for (Component g : components) {
+			p += g.priori;
+			// System.out.println(r + " " + p); //tmp
+			if (r <= p)
+				return g.distribution.rand();
+		}
 
-        // we should not arrive here.
-        throw new IllegalStateException();
-    }
+		// we should not arrive here.
+		throw new IllegalStateException();
+	}
 
-    @Override
-    public double quantile(double p) {
-        if (p < 0.0 || p > 1.0) {
-            throw new IllegalArgumentException("Invalid p: " + p);
-        }
+	@Override
+	public double quantile(double p) {
+		if (p < 0.0 || p > 1.0) {
+			throw new IllegalArgumentException("Invalid p: " + p);
+		}
 
-        // Starting guess near peak of density.
-        // Expand interval until we bracket.
-        double xl, xu, inc = 1;
-        double x = (int) mean();
-        if (p < cdf(x)) {
-            do {
-                x -= inc;
-                inc *= 2;
-            } while (p < cdf(x));
-            xl = x;
-            xu = x + inc / 2;
-        } else {
-            do {
-                x += inc;
-                inc *= 2;
-            } while (p > cdf(x));
-            xu = x;
-            xl = x - inc / 2;
-        }
+		// Starting guess near peak of density.
+		// Expand interval until we bracket.
+		double xl, xu, inc = 1;
+		double x = (int) mean();
+		if (p < cdf(x)) {
+			do {
+				x -= inc;
+				inc *= 2;
+			} while (p < cdf(x));
+			xl = x;
+			xu = x + inc / 2;
+		} else {
+			do {
+				x += inc;
+				inc *= 2;
+			} while (p > cdf(x));
+			xu = x;
+			xl = x - inc / 2;
+		}
 
-        return quantile(p, xl, xu);
-    }
+		return quantile(p, xl, xu);
+	}
 
-    @Override
-    public int length() {
-        int length = components.length - 1; // independent priori parameters
-        for (Component component : components)
-            length += component.distribution.length();
+	@Override
+	public int length() {
+		int length = components.length - 1; // independent priori parameters
+		for (Component component : components)
+			length += component.distribution.length();
 
-        return length;
-    }
+		return length;
+	}
 
-    /**
-     * Returns the number of components in the mixture.
-     * @return the number of components in the mixture.
-     */
-    public int size() {
-        return components.length;
-    }
+	/**
+	 * Returns the number of components in the mixture.
+	 *
+	 * @return the number of components in the mixture.
+	 */
+	public int size() {
+		return components.length;
+	}
 
-    /**
-     * Returns the BIC score.
-     * @param data the data to calculate likelihood.
-     * @return the BIC score.
-     */
-    public double bic(double[] data) {
-        int n = data.length;
+	/**
+	 * Returns the BIC score.
+	 *
+	 * @param data the data to calculate likelihood.
+	 * @return the BIC score.
+	 */
+	public double bic(double[] data) {
+		int n = data.length;
 
-        double logLikelihood = 0.0;
-        for (double x : data) {
-            double p = p(x);
-            if (p > 0) logLikelihood += Math.log(p);
-        }
+		double logLikelihood = 0.0;
+		for (double x : data) {
+			double p = p(x);
+			if (p > 0)
+				logLikelihood += Math.log(p);
+		}
 
-        return logLikelihood - 0.5 * length() * Math.log(n);
-    }
+		return logLikelihood - 0.5 * length() * Math.log(n);
+	}
 
-    @Override
-    public String toString() {
-        return Arrays.stream(components)
-                .map(component -> String.format("%.2f x %s", component.priori, component.distribution))
-                .collect(Collectors.joining(" + ", String.format("Mixture(%d)[", components.length), "]"));
-    }
+	@Override
+	public String toString() {
+		return Arrays.stream(components)
+				.map(component -> String.format("%.2f x %s", component.priori, component.distribution))
+				.collect(Collectors.joining(" + ", String.format("Mixture(%d)[", components.length), "]"));
+	}
 }
