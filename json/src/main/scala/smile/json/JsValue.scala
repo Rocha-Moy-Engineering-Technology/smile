@@ -614,7 +614,7 @@ case class JsObject(fields: collection.mutable.Map[String, JsValue]) extends JsV
 }
 
 object JsObject {
-  def apply(fields: (String, JsValue)*) = new JsObject(collection.mutable.Map(fields: _*))
+  def apply(fields: (String, JsValue)*) = new JsObject(collection.mutable.Map(fields*))
   def apply(map: Map[String, JsValue]) = new JsObject(collection.mutable.Map() ++ map)
 }
 
@@ -737,5 +737,5 @@ case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends Js
 }
 
 object JsArray {
-  def apply(elements: JsValue*) = new JsArray(collection.mutable.ArrayBuffer(elements: _*))
+  def apply(elements: JsValue*) = new JsArray(collection.mutable.ArrayBuffer(elements*))
 }

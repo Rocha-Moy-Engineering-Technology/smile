@@ -77,7 +77,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
         val doc = JsObject()
         deserialize(buffer, doc)
         val elements = doc.fields.map{case (k, v) => (k.toInt, v)}.toSeq.sortBy(_._1).map(_._2)
-        JsArray(elements: _*)
+        JsArray(elements*)
 
       case x => throw new IllegalStateException("Unsupported BSON type: %02X" format x)
     }
@@ -379,7 +379,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
             val doc = JsObject()
             val field = ename(buffer)
             deserialize(buffer, doc)
-            json(field) = JsArray(doc.fields.map { case (k, v) => (k.toInt, v) }.toSeq.sortBy(_._1).map(_._2): _*)
+            json(field) = JsArray(doc.fields.map { case (k, v) => (k.toInt, v) }.toSeq.sortBy(_._1).map(_._2)*)
 
           case x               => throw new IllegalStateException("Unsupported BSON type: %02X" format x)
         }

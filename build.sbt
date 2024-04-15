@@ -1,7 +1,7 @@
 name := "smile"
 
 // lazy val scala213 = "2.13.11"
-lazy val scala3 = "3.3.1"
+lazy val scala3 = "3.4.1"
 // lazy val supportedScalaVersions = List(scala213, scala3)
 lazy val supportedScalaVersions = List(scala3)
 

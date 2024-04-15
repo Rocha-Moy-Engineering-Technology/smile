@@ -67,7 +67,7 @@ object ClassificationModel {
       val cv = CrossValidation.stratify(round, kfold, formula, data, (f, d) => fit(algorithm, f, d, params))
       val models = cv.rounds.asScala.map(round => round.model).toArray
       val model = if (ensemble)
-        DataFrameClassifier.ensemble(models: _*)
+        DataFrameClassifier.ensemble(models*)
       else
         fit(algorithm, formula, data, params)
 
@@ -80,7 +80,7 @@ object ClassificationModel {
 
     val y = formula.response().variables()
     val predictors = data.schema().fields().filter(field => !y.contains(field.name))
-    val schema = new StructType(predictors: _*)
+    val schema = new StructType(predictors*)
     ClassificationModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics)
   }
 

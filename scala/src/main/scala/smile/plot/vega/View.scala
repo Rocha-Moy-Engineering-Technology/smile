@@ -532,7 +532,7 @@ trait View extends VegaLite {
     spec.selection = JsObject(
       selections.map { case (name, t) =>
           name -> JsObject("type" -> JsString(t))
-      }: _*
+      }*
     )
     this
   }

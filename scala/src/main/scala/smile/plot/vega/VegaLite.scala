@@ -139,7 +139,7 @@ trait VegaLite {
   /** Sets an array of objects describing the data source.
     */
   def data(rows: JsObject*): VegaLite = {
-    data(JsArray(rows: _*))
+    data(JsArray(rows*))
   }
 
   /** Sets a data frame describing the data source.
@@ -194,7 +194,7 @@ trait VegaLite {
     * bin, timeUnit, aggregate, sort, and stack.
     */
   def transform(transforms: JsObject*): VegaLite = {
-    spec.transform = JsArray(transforms: _*)
+    spec.transform = JsArray(transforms*)
     this
   }
 
@@ -256,7 +256,7 @@ object VegaLite {
   /** Returns a single view specification with inline data. */
   def apply(rows: JsObject*): View = {
     new View {
-      override val spec: JsObject = of(JsArray(rows: _*))
+      override val spec: JsObject = of(JsArray(rows*))
     }
   }
 
@@ -300,7 +300,7 @@ object VegaLite {
   /** Returns a facet specification with inline data. */
   def facet(rows: JsObject*): Facet = {
     new Facet {
-      override val spec: JsObject = of(JsArray(rows: _*))
+      override val spec: JsObject = of(JsArray(rows*))
     }
   }
 
@@ -334,7 +334,7 @@ object VegaLite {
   def layer(layers: View*): Layer = {
     new Layer {
       override val spec: JsObject = of()
-      super.layer(layers: _*)
+      super.layer(layers*)
     }
   }
 
@@ -342,20 +342,20 @@ object VegaLite {
   def layer(json: JsArray, layers: View*): Layer = {
     new Layer {
       override val spec: JsObject = of(json)
-      super.layer(layers: _*)
+      super.layer(layers*)
     }
   }
 
   /** Returns a layered view specification.  */
   def layer(df: DataFrame, layers: View*): Layer = {
-    layer(df.toJSON, layers: _*)
+    layer(df.toJSON, layers*)
   }
 
   /** Returns a layered view specification.  */
   def layer(url: String, format: JsValue, layers: View*): Layer = {
     new Layer {
       override val spec: JsObject = of(url, format)
-      super.layer(layers: _*)
+      super.layer(layers*)
     }
   }
 
@@ -363,7 +363,7 @@ object VegaLite {
   def hconcat(views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = of()
-      spec.hconcat = JsArray(views.map(_.spec): _*)
+      spec.hconcat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -371,20 +371,20 @@ object VegaLite {
   def hconcat(json: JsArray, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = of(json)
-      spec.hconcat = JsArray(views.map(_.spec): _*)
+      spec.hconcat = JsArray(views.map(_.spec)*)
     }
   }
 
   /** Horizontal concatenation. Put multiple views into a column.  */
   def hconcat(df: DataFrame, views: VegaLite*): ViewLayoutComposition = {
-    hconcat(df.toJSON, views: _*)
+    hconcat(df.toJSON, views*)
   }
 
   /** Horizontal concatenation. Put multiple views into a column.  */
   def hconcat(url: String, format: JsValue, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = of(url, format)
-      spec.hconcat = JsArray(views.map(_.spec): _*)
+      spec.hconcat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -392,7 +392,7 @@ object VegaLite {
   def vconcat(views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = of()
-      spec.vconcat = JsArray(views.map(_.spec): _*)
+      spec.vconcat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -400,20 +400,20 @@ object VegaLite {
   def vconcat(json: JsArray, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = of(json)
-      spec.vconcat = JsArray(views.map(_.spec): _*)
+      spec.vconcat = JsArray(views.map(_.spec)*)
     }
   }
 
   /** Vertical concatenation. Put multiple views into a row.  */
   def vconcat(df: DataFrame, views: VegaLite*): ViewLayoutComposition = {
-    vconcat(df.toJSON, views: _*)
+    vconcat(df.toJSON, views*)
   }
 
   /** Vertical concatenation. Put multiple views into a row.  */
   def vconcat(url: String, format: JsValue, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = of(url, format)
-      spec.vconcat = JsArray(views.map(_.spec): _*)
+      spec.vconcat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -424,7 +424,7 @@ object VegaLite {
     new ViewLayoutComposition {
       override val spec: JsObject = of()
       spec.columns = columns
-      spec.concat = JsArray(views.map(_.spec): _*)
+      spec.concat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -435,7 +435,7 @@ object VegaLite {
     new ViewLayoutComposition {
       override val spec: JsObject = of(json)
       spec.columns = columns
-      spec.concat = JsArray(views.map(_.spec): _*)
+      spec.concat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -443,7 +443,7 @@ object VegaLite {
     * a flexible flow layout.
     */
   def concat(df: DataFrame, columns: Int, views: VegaLite*): ViewLayoutComposition = {
-    concat(df.toJSON, columns, views: _*)
+    concat(df.toJSON, columns, views*)
   }
 
   /** General (wrappable) concatenation. Put multiple views into
@@ -453,7 +453,7 @@ object VegaLite {
     new ViewLayoutComposition {
       override val spec: JsObject = of(url, format)
       spec.columns = columns
-      spec.concat = JsArray(views.map(_.spec): _*)
+      spec.concat = JsArray(views.map(_.spec)*)
     }
   }
 
@@ -466,7 +466,7 @@ object VegaLite {
   def repeat(json: JsArray, view: VegaLite, fields: String*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = of(json)
-      spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_)): _*))
+      spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_))*))
       spec.spec = view.spec
     }
   }
@@ -478,7 +478,7 @@ object VegaLite {
     * @param fields The fields that should be used for each entry.
     */
   def repeat(df: DataFrame, view: VegaLite, fields: String*): ViewLayoutComposition = {
-    repeat(df.toJSON, view, fields: _*)
+    repeat(df.toJSON, view, fields*)
   }
 
   /** Creates a view for each entry in an array of fields. This operator
@@ -490,7 +490,7 @@ object VegaLite {
   def repeat(url: String, format: JsValue, view: VegaLite, fields: String*): ViewLayoutComposition = {
     new ViewLayoutComposition {
       override val spec: JsObject = of(url, format)
-      spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_)): _*))
+      spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_))*))
       spec.spec = view.spec
     }
   }
@@ -506,8 +506,8 @@ object VegaLite {
     new ViewLayoutComposition {
       override val spec: JsObject = of(json)
       spec.repeat = JsObject(
-        "row" -> JsArray(row.map(JsString(_)): _*),
-        "column" -> JsArray(column.map(JsString(_)): _*)
+        "row" -> JsArray(row.map(JsString(_))*),
+        "column" -> JsArray(column.map(JsString(_))*)
       )
       spec.spec = view.spec
     }
@@ -535,8 +535,8 @@ object VegaLite {
     new ViewLayoutComposition {
       override val spec: JsObject = of(url, format)
       spec.repeat = JsObject(
-        "row" -> JsArray(row.map(JsString(_)): _*),
-        "column" -> JsArray(column.map(JsString(_)): _*)
+        "row" -> JsArray(row.map(JsString(_))*),
+        "column" -> JsArray(column.map(JsString(_))*)
       )
       spec.spec = view.spec
     }

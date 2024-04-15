@@ -674,7 +674,7 @@ private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit
   def $(col: Int): Array[Double] = a.map(_(col))
 
   /** Returns multiple rows. */
-  def row(i: Int*): Array[Array[Double]] = apply(i: _*)
+  def row(i: Int*): Array[Array[Double]] = apply(i*)
 
   /** Returns a range of rows. */
   def row(i: Range): Array[Array[Double]] = apply(i)
@@ -762,8 +762,8 @@ private[math] class PimpedDoubleArray(override val a: Array[Double]) extends Pim
 private[math] class MatrixOps(a: Matrix) {
   def apply(i: Slice, j: Slice): Matrix = (i, j) match {
     case (Slice(0, -1, 1), Slice(0, -1, 1)) => a
-    case (Slice(0, -1, 1), _) => a.cols(j.toRange(a.ncol): _*)
-    case (_, Slice(0, -1, 1)) => a.rows(i.toRange(a.nrow): _*)
+    case (Slice(0, -1, 1), _) => a.cols(j.toRange(a.ncol)*)
+    case (_, Slice(0, -1, 1)) => a.rows(i.toRange(a.nrow)*)
     case (_, _) =>
       val rows = i.toRange(a.nrow)
       val cols = j.toRange(a.ncol)
