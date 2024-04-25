@@ -20,167 +20,174 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 
 /**
- * The finite mixture of distributions from exponential family.
- * The EM algorithm can be used to learn the mixture model from data.
- * EM is particularly useful when the likelihood is an exponential family: the
- * E-step becomes the sum of expectations of sufficient statistics, and the
- * M-step involves maximizing a linear function. In such a case, it is usually
- * possible to derive closed form updates for each step.
+ * The finite mixture of distributions from exponential family. The EM algorithm
+ * can be used to learn the mixture model from data. EM is particularly useful
+ * when the likelihood is an exponential family: the E-step becomes the sum of
+ * expectations of sufficient statistics, and the M-step involves maximizing a
+ * linear function. In such a case, it is usually possible to derive closed form
+ * updates for each step.
  *
  * @author Haifeng Li
  */
 public class ExponentialFamilyMixture extends Mixture {
-    private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExponentialFamilyMixture.class);
+	private static final long serialVersionUID = 2L;
+	private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExponentialFamilyMixture.class);
 
-    /** The log-likelihood when the distribution is fit on a sample data. */
-    public final double L;
-    /** The BIC score when the distribution is fit on a sample data. */
-    public final double bic;
+	/** The log-likelihood when the distribution is fit on a sample data. */
+	public final double L;
+	/** The BIC score when the distribution is fit on a sample data. */
+	public final double bic;
 
-    /**
-     * Constructor.
-     * @param components a list of exponential family distributions.
-     */
-    public ExponentialFamilyMixture(Component... components) {
-        this(0.0, 1, components);
-    }
+	/**
+	 * Constructor.
+	 * 
+	 * @param components a list of exponential family distributions.
+	 */
+	public ExponentialFamilyMixture(Component... components) {
+		this(0.0, 1, components);
+	}
 
-    /**
-     * Constructor.
-     * @param components a list of discrete exponential family distributions.
-     * @param L the log-likelihood.
-     * @param n the number of samples to fit the distribution.
-     */
-    ExponentialFamilyMixture(double L, int n, Component... components) {
-        super(components);
+	/**
+	 * Constructor.
+	 * 
+	 * @param components a list of discrete exponential family distributions.
+	 * @param L          the log-likelihood.
+	 * @param n          the number of samples to fit the distribution.
+	 */
+	ExponentialFamilyMixture(double L, int n, Component... components) {
+		super(components);
 
-        for (Component component : components) {
-            if (!(component.distribution instanceof ExponentialFamily)) {
-                throw new IllegalArgumentException("Component " + component + " is not of exponential family.");
-            }
-        }
+		for (Component component : components) {
+			if (!(component.distribution instanceof ExponentialFamily)) {
+				throw new IllegalArgumentException("Component " + component + " is not of exponential family.");
+			}
+		}
 
-        this.L = L;
-        this.bic = L - 0.5 * length() * Math.log(n);
-    }
+		this.L = L;
+		this.bic = L - 0.5 * length() * Math.log(n);
+	}
 
-    /**
-     * Fits the mixture model with the EM algorithm.
-     * @param components the initial configuration of mixture. Components may have
-     *                   different distribution form.
-     * @param x the training data.
-     * @return the distribution.
-     */
-    public static ExponentialFamilyMixture fit(double[] x, Component... components) {
-        return fit(x, components, 0.0, 500, 1E-4);
-    }
+	/**
+	 * Fits the mixture model with the EM algorithm.
+	 * 
+	 * @param components the initial configuration of mixture. Components may have
+	 *                   different distribution form.
+	 * @param x          the training data.
+	 * @return the distribution.
+	 */
+	public static ExponentialFamilyMixture fit(double[] x, Component... components) {
+		return fit(x, components, 0.0, 500, 1E-4);
+	}
 
-    /**
-     * Fits the mixture model with the EM algorithm.
-     *
-     * @param components the initial configuration.
-     * @param x the training data.
-     * @param gamma the regularization parameter. Although regularization works
-     *              well for high dimensional data, it often reduces the model
-     *              to too few components. For one-dimensional data, gamma should
-     *              be 0 in general.
-     * @param maxIter the maximum number of iterations.
-     * @param tol the tolerance of convergence test.
-     * @return the distribution.
-     */
-    public static ExponentialFamilyMixture fit(double[] x, Component[] components, double gamma, int maxIter, double tol) {
-        if (x.length < components.length / 2) {
-            throw new IllegalArgumentException("Too many components");
-        }
+	/**
+	 * Fits the mixture model with the EM algorithm.
+	 *
+	 * @param components the initial configuration.
+	 * @param x          the training data.
+	 * @param gamma      the regularization parameter. Although regularization works
+	 *                   well for high dimensional data, it often reduces the model
+	 *                   to too few components. For one-dimensional data, gamma
+	 *                   should be 0 in general.
+	 * @param maxIter    the maximum number of iterations.
+	 * @param tol        the tolerance of convergence test.
+	 * @return the distribution.
+	 */
+	public static ExponentialFamilyMixture fit(double[] x, Component[] components, double gamma, int maxIter,
+			double tol) {
+		if (x.length < components.length / 2) {
+			throw new IllegalArgumentException("Too many components");
+		}
 
-        if (gamma < 0.0 || gamma > 0.2) {
-            throw new IllegalArgumentException("Invalid regularization factor gamma.");
-        }
+		if (gamma < 0.0 || gamma > 0.2) {
+			throw new IllegalArgumentException("Invalid regularization factor gamma.");
+		}
 
-        int n = x.length;
-        int k = components.length;
+		int n = x.length;
+		int k = components.length;
 
-        double[][] posteriori = new double[k][n];
+		double[][] posteriori = new double[k][n];
 
-        // Log Likelihood
-        double L = 0.0;
+		// Log Likelihood
+		double L = 0.0;
 
-        // EM loop until convergence
-        double diff = Double.MAX_VALUE;
-        for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
-            // Expectation step
-            for (int i = 0; i < k; i++) {
-                Component c = components[i];
+		// EM loop until convergence
+		double diff = Double.MAX_VALUE;
+		for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
+			// Expectation step
+			for (int i = 0; i < k; i++) {
+				Component c = components[i];
 
-                for (int j = 0; j < n; j++) {
-                    if (Double.isNaN(c.priori) || Double.isInfinite(c.priori) || c.priori <= 0.0) {
-                       throw new IllegalArgumentException("c.priori : " + c.priori);
-                    }
-                    if (Double.isNaN(c.distribution.p(x[j])) || Double.isInfinite(c.distribution.p(x[j])) || c.distribution.p(x[j]) < 0.0) {
-                          throw new IllegalArgumentException("c.distribution.p(x[j]) : " + c.distribution.p(x[j]) + " " + x[j]);
-                    }
-                    posteriori[i][j] = c.priori * c.distribution.p(x[j]);
-                }
-            }
+				for (int j = 0; j < n; j++) {
+					if (Double.isNaN(c.priori) || Double.isInfinite(c.priori) || c.priori <= 0.0) {
+						throw new IllegalArgumentException("c.priori : " + c.priori);
+					}
+					if (Double.isNaN(c.distribution.p(x[j])) || Double.isInfinite(c.distribution.p(x[j]))
+							|| c.distribution.p(x[j]) < 0.0) {
+						throw new IllegalArgumentException(
+								"c.distribution.p(x[j]) : " + c.distribution.p(x[j]) + " " + x[j]);
+					}
+					posteriori[i][j] = c.priori * c.distribution.p(x[j]);
+				}
+			}
 
-            // Normalize posteriori probability.
-            for (int j = 0; j < n; j++) {
-                double p = 0.0;
+			// Normalize posteriori probability.
+			for (int j = 0; j < n; j++) {
+				double p = 0.0;
 
-                for (int i = 0; i < k; i++) {
-                    p += posteriori[i][j];
-                }
+				for (int i = 0; i < k; i++) {
+					p += posteriori[i][j];
+				}
 
-                if (Double.isNaN(p) || Double.isInfinite(p) || p <= 0.0) {
-                    return new ExponentialFamilyMixture(L, x.length, components);
-                    // throw new IllegalArgumentException("Invalid p: " + p);
-                }
+				if (Double.isNaN(p) || Double.isInfinite(p) || p <= 0.0) {
+					throw new IllegalArgumentException("Invalid p: " + p);
+				}
 
-                for (int i = 0; i < k; i++) {
-                    posteriori[i][j] /= p;
-                }
+				for (int i = 0; i < k; i++) {
+					posteriori[i][j] /= p;
+				}
 
-                // Adjust posterior probabilites based on Regularized EM algorithm.
-                if (gamma > 0) {
-                    for (int i = 0; i < k; i++) {
-                        posteriori[i][j] *= (1 + gamma * MathEx.log2(posteriori[i][j]));
-                        if (Double.isNaN(posteriori[i][j]) || posteriori[i][j] < 0.0) {
-                            System.out.println("Regularization (1 + gamma * MathEx.log2(posteriori[i][j])) yielded: " + posteriori[i][j]);
-                            posteriori[i][j] = 0.0;
-                        }
-                    }
-                }
-            }
+				// Adjust posterior probabilites based on Regularized EM algorithm.
+				if (gamma > 0) {
+					for (int i = 0; i < k; i++) {
+						posteriori[i][j] *= (1 + gamma * MathEx.log2(posteriori[i][j]));
+						if (Double.isNaN(posteriori[i][j]) || posteriori[i][j] < 0.0) {
+							System.out.println("Regularization (1 + gamma * MathEx.log2(posteriori[i][j])) yielded: "
+									+ posteriori[i][j]);
+							posteriori[i][j] = 0.0;
+						}
+					}
+				}
+			}
 
-            // Maximization step
-            double Z = 0.0;
-            for (int i = 0; i < k; i++) {
-                components[i] = ((ExponentialFamily) components[i].distribution).M(x, posteriori[i]);
-                Z += components[i].priori;
-            }
+			// Maximization step
+			double Z = 0.0;
+			for (int i = 0; i < k; i++) {
+				components[i] = ((ExponentialFamily) components[i].distribution).M(x, posteriori[i]);
+				Z += components[i].priori;
+			}
 
-            for (int i = 0; i < k; i++) {
-                components[i] = new Component(components[i].priori / Z, components[i].distribution);
-            }
+			for (int i = 0; i < k; i++) {
+				components[i] = new Component(components[i].priori / Z, components[i].distribution);
+			}
 
-            double loglikelihood = 0.0;
-            for (double xi : x) {
-                double p = 0.0;
-                for (Component c : components) {
-                    p += c.priori * c.distribution.p(xi);
-                }
-                if (p > 0) loglikelihood += Math.log(p);
-            }
+			double loglikelihood = 0.0;
+			for (double xi : x) {
+				double p = 0.0;
+				for (Component c : components) {
+					p += c.priori * c.distribution.p(xi);
+				}
+				if (p > 0)
+					loglikelihood += Math.log(p);
+			}
 
-            diff = loglikelihood - L;
-            L = loglikelihood;
+			diff = loglikelihood - L;
+			L = loglikelihood;
 
-            if (iter % 10 == 0) {
-                logger.info(String.format("The log-likelihood after %d iterations: %.4f", iter, L));
-            }
-        }
+			if (iter % 10 == 0) {
+				logger.info(String.format("The log-likelihood after %d iterations: %.4f", iter, L));
+			}
+		}
 
-        return new ExponentialFamilyMixture(L, x.length, components);
-    }
+		return new ExponentialFamilyMixture(L, x.length, components);
+	}
 }
