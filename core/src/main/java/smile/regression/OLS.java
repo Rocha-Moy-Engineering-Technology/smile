@@ -77,7 +77,7 @@ public class OLS {
 
 	/**
 	 * Fits an ordinary least squares model.
-	 * 
+	 *
 	 * @param formula a symbolic description of the model to be fitted.
 	 * @param data    the data frame of the explanatory and response variables. NO
 	 *                NEED to include a constant column of 1s for bias.
@@ -98,7 +98,7 @@ public class OLS {
 	 * <li><code>smile.ols.recursive</code> (default true) is a boolean. If true,
 	 * the return model supports recursive least squares
 	 * </ul>
-	 * 
+	 *
 	 * @param formula a symbolic description of the model to be fitted.
 	 * @param data    the data frame of the explanatory and response variables. NO
 	 *                NEED to include a constant column of 1s for bias.
@@ -114,7 +114,7 @@ public class OLS {
 
 	/**
 	 * Fits an ordinary least squares model.
-	 * 
+	 *
 	 * @param formula   a symbolic description of the model to be fitted.
 	 * @param data      the data frame of the explanatory and response variables. NO
 	 *                  NEED to include a constant column of 1s for bias.
@@ -178,8 +178,8 @@ public class OLS {
 				ttest[i][1] = se;
 				double t = w[i] / se;
 				ttest[i][2] = t;
-				ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5,
-						model.df / (model.df + t * t));
+				TDistribution tDist = new TDistribution(model.df);
+				ttest[i][3] = 2 * (1.0 - tDist.cumulativeProbability(Math.abs(t))); // Two-tailed p-value
 			}
 		}
 
