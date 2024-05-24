@@ -18,6 +18,7 @@
 package smile.stat.distribution;
 
 import smile.math.MathEx;
+import java.util.ArrayList;
 
 /**
  * The finite mixture of distributions from exponential family. The EM algorithm
@@ -40,7 +41,7 @@ public class ExponentialFamilyMixture extends Mixture {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param components a list of exponential family distributions.
 	 */
 	public ExponentialFamilyMixture(Component... components) {
@@ -49,7 +50,7 @@ public class ExponentialFamilyMixture extends Mixture {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param components a list of discrete exponential family distributions.
 	 * @param L          the log-likelihood.
 	 * @param n          the number of samples to fit the distribution.
@@ -69,7 +70,7 @@ public class ExponentialFamilyMixture extends Mixture {
 
 	/**
 	 * Fits the mixture model with the EM algorithm.
-	 * 
+	 *
 	 * @param components the initial configuration of mixture. Components may have
 	 *                   different distribution form.
 	 * @param x          the training data.
@@ -92,14 +93,34 @@ public class ExponentialFamilyMixture extends Mixture {
 	 * @param tol        the tolerance of convergence test.
 	 * @return the distribution.
 	 */
-	public static ExponentialFamilyMixture fit(double[] x, Component[] components, double gamma, int maxIter,
+	public static ExponentialFamilyMixture fit(double[] x, Component[] _components, double gamma, int maxIter,
 			double tol) {
-		if (x.length < components.length / 2) {
+		if (x.length < _components.length / 2) {
 			throw new IllegalArgumentException("Too many components");
 		}
 
 		if (gamma < 0.0 || gamma > 0.2) {
 			throw new IllegalArgumentException("Invalid regularization factor gamma.");
+		}
+
+		ArrayList<Component> componentBuffer = new ArrayList<>();
+		double cNormalization = 0.0;
+		for (int i = 0; i < _components.length; i++) {
+			Component c = _components[i];
+			if (c.priori > 0.0) {
+				componentBuffer.add(c);
+				cNormalization += c.priori;
+			}
+		}
+		Component[] components = componentBuffer.toArray(new Component[componentBuffer.size()]);
+		for (int i = 0; i < _components.length; i++) {
+			Component c = components[i];
+			double newPriori = c.priori / cNormalization;
+			Component newComponent = new Component(newPriori, c.distribution);
+			components[i] = newComponent;
+		}
+		if (components.length == 0) {
+			throw new IllegalArgumentException("All components have zero priori.");
 		}
 
 		int n = x.length;
