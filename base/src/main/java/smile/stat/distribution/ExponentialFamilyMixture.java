@@ -80,6 +80,34 @@ public class ExponentialFamilyMixture extends Mixture {
 		return fit(x, components, 0.0, 500, 1E-4);
 	}
 
+	public static void resetComponents(Component[] components) {
+		double minPriori = Double.MAX_VALUE;
+		double cNormalization = 0.0;
+		for (int i = 0; i < components.length; i++) {
+			Component c = components[i];
+			if (c.priori > 0.0) {
+				minPriori = Math.min(minPriori, c.priori);
+				cNormalization += c.priori;
+			} else {
+				components[i] = null;
+			}
+		}
+		double smallPriori = minPriori * 1e-6;
+		for (int i = 0; i < components.length; i++) {
+			Component c = components[i];
+			if (c == null) {
+				components[i] = new Component(smallPriori, c.distribution);
+				cNormalization += smallPriori;
+			}
+		}
+		for (int i = 0; i < components.length; i++) {
+			Component c = components[i];
+			double newPriori = c.priori / cNormalization;
+			Component newComponent = new Component(newPriori, c.distribution);
+			components[i] = newComponent;
+		}
+	}
+
 	/**
 	 * Fits the mixture model with the EM algorithm.
 	 *
@@ -93,9 +121,9 @@ public class ExponentialFamilyMixture extends Mixture {
 	 * @param tol        the tolerance of convergence test.
 	 * @return the distribution.
 	 */
-	public static ExponentialFamilyMixture fit(double[] x, Component[] _components, double gamma, int maxIter,
+	public static ExponentialFamilyMixture fit(double[] x, Component[] components, double gamma, int maxIter,
 			double tol) {
-		if (x.length < _components.length / 2) {
+		if (x.length < components.length / 2) {
 			throw new IllegalArgumentException("Too many components");
 		}
 
@@ -103,25 +131,7 @@ public class ExponentialFamilyMixture extends Mixture {
 			throw new IllegalArgumentException("Invalid regularization factor gamma.");
 		}
 
-		ArrayList<Component> componentBuffer = new ArrayList<>();
-		double cNormalization = 0.0;
-		for (int i = 0; i < _components.length; i++) {
-			Component c = _components[i];
-			if (c.priori > 0.0) {
-				componentBuffer.add(c);
-				cNormalization += c.priori;
-			}
-		}
-		Component[] components = componentBuffer.toArray(new Component[componentBuffer.size()]);
-		for (int i = 0; i < _components.length; i++) {
-			Component c = components[i];
-			double newPriori = c.priori / cNormalization;
-			Component newComponent = new Component(newPriori, c.distribution);
-			components[i] = newComponent;
-		}
-		if (components.length == 0) {
-			throw new IllegalArgumentException("All components have zero priori.");
-		}
+		resetComponents(components);
 
 		int n = x.length;
 		int k = components.length;
@@ -172,8 +182,6 @@ public class ExponentialFamilyMixture extends Mixture {
 					for (int i = 0; i < k; i++) {
 						posteriori[i][j] *= (1 + gamma * MathEx.log2(posteriori[i][j]));
 						if (Double.isNaN(posteriori[i][j]) || posteriori[i][j] < 0.0) {
-							System.out.println("Regularization (1 + gamma * MathEx.log2(posteriori[i][j])) yielded: "
-									+ posteriori[i][j]);
 							posteriori[i][j] = 0.0;
 						}
 					}
@@ -187,9 +195,13 @@ public class ExponentialFamilyMixture extends Mixture {
 				Z += components[i].priori;
 			}
 
+			if (Double.isNaN(Z) || Double.isInfinite(Z) || Z <= 0.0) {
+				throw new IllegalArgumentException("Invalid Z: " + Z);
+			}
 			for (int i = 0; i < k; i++) {
 				components[i] = new Component(components[i].priori / Z, components[i].distribution);
 			}
+			resetComponents(components);
 
 			double loglikelihood = 0.0;
 			for (double xi : x) {
