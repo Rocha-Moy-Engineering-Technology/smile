@@ -18,7 +18,7 @@
 package smile.stat.distribution;
 
 import smile.math.MathEx;
-import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * The finite mixture of distributions from exponential family. The EM algorithm
@@ -83,12 +83,16 @@ public class ExponentialFamilyMixture extends Mixture {
 	public static void resetComponents(Component[] components) {
 		double minPriori = Double.MAX_VALUE;
 		double cNormalization = 0.0;
+
+		HashMap<Integer, Component> nullComponents = new HashMap<>();
+
 		for (int i = 0; i < components.length; i++) {
 			Component c = components[i];
 			if (c.priori > 0.0) {
 				minPriori = Math.min(minPriori, c.priori);
 				cNormalization += c.priori;
 			} else {
+				nullComponents.put(i, c);
 				components[i] = null;
 			}
 		}
@@ -96,7 +100,7 @@ public class ExponentialFamilyMixture extends Mixture {
 		for (int i = 0; i < components.length; i++) {
 			Component c = components[i];
 			if (c == null) {
-				components[i] = new Component(smallPriori, c.distribution);
+				components[i] = new Component(smallPriori, nullComponents.get(i).distribution);
 				cNormalization += smallPriori;
 			}
 		}
@@ -169,9 +173,9 @@ public class ExponentialFamilyMixture extends Mixture {
 					p += posteriori[i][j];
 				}
 
-				if (Double.isNaN(p) || Double.isInfinite(p) || p <= 0.0) {
-					throw new IllegalArgumentException("Invalid p: " + p);
-				}
+				// if (Double.isNaN(p) || Double.isInfinite(p) || p <= 0.0) {
+				// throw new IllegalArgumentException("Invalid p: " + p);
+				// }
 
 				for (int i = 0; i < k; i++) {
 					posteriori[i][j] /= p;
