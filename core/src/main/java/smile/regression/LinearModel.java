@@ -188,9 +188,9 @@ public class LinearModel implements DataFrameRegression {
 		this.b = b;
 		this.bias = predictors[0].equals("Intercept");
 
-		int df_model = this.p;
+		int df_model = this.p + (this.bias ? 0 : (this.b == 0 ? 0 : 1));
 		int n = X.nrow();
-		int df_residuals = n - this.p;
+		int df_residuals = n - df_model;
 		df = df_residuals;
 
 		fittedValues = new double[n];
@@ -218,16 +218,13 @@ public class LinearModel implements DataFrameRegression {
 		// F-statistic calculation
 		F = (RSquared / df_model) / ((1 - RSquared) / df_residuals);
 
-		int df1 = df_model; // Degrees of freedom for the model
-		int df2 = df_residuals; // Degrees of freedom for the residuals
-
-		if (F.isInfinite()) {
+		if (Double.isInfinite(F)) {
 			pvalue = 0.0;
 		} else {
-			if (df2 > 0 && F > 0.0) {
-				if (df1 > 0) {
+			if (df_residuals > 0 && F > 0.0) {
+				if (df_model > 0) {
 					// Compute the p-value using the F-distribution
-					FDistribution fDist = new FDistribution(df1, df2);
+					FDistribution fDist = new FDistribution(df_model, df_residuals);
 					// The cumulative probability for the F-distribution gives the left tail,
 					// so we subtract from 1 to get the right tail, which is the p-value
 					pvalue = 1.0 - fDist.cumulativeProbability(F);
@@ -235,7 +232,7 @@ public class LinearModel implements DataFrameRegression {
 					pvalue = Double.NaN;
 				}
 			} else {
-				// Handle edge cases where F is non-positive or df2 is zero
+				// Handle edge cases where F is non-positive or df_residuals is zero
 				pvalue = Double.NaN;
 			}
 		}
