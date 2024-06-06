@@ -188,11 +188,11 @@ public class LinearModel implements DataFrameRegression {
 		this.b = b;
 		this.bias = predictors[0].equals("Intercept");
 
-		int df_model = w.length;
-		int df_residuals = y.length - df_model;
+		int df_model = this.p - 1;
+		int n = X.nrow();
+		int df_residuals = n - this.p - 1;
 		df = df_residuals;
 
-		int n = X.nrow();
 		fittedValues = new double[n];
 		Arrays.fill(fittedValues, b);
 		X.mv(1.0, w, 1.0, fittedValues);
@@ -216,8 +216,8 @@ public class LinearModel implements DataFrameRegression {
 		adjustedRSquared = 1.0 - ((1 - RSquared) * (n - 1) / df_residuals);
 
 		// F-statistic calculation
-		double MSR = (TSS - RSS) / df_model;
-		double MSE = RSS / df_residuals;
+		double MSR = RSS / df_model;
+		double MSE = (TSS−RSS) / df_residuals;
 		F = MSR / MSE;
 
 		int df1 = df_model; // Degrees of freedom for the model
