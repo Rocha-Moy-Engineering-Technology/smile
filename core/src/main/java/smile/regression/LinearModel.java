@@ -147,6 +147,28 @@ public class LinearModel implements DataFrameRegression {
 	 */
 	Matrix V;
 
+	public double computeMaxPvalue(double[] y, Matrix X, double[] w, double RSS, int df_residuals) {
+		int p = w.length; // Number of coefficients
+		double[] pvalues = new double[p]; // Array to store p-values for each coefficient
+
+		for (int j = 0; j < p; j++) {
+			double sumX2 = 0;
+			for (int i = 0; i < X.nrow(); i++) {
+				double xi = X.get(i, j);
+				sumX2 += xi * xi;
+			}
+			double seCoefficient = Math.sqrt(RSS / df_residuals) / Math.sqrt(sumX2);
+			double tStatistic = w[j] / seCoefficient;
+
+			// Compute the p-value using the t-distribution
+			TDistribution tDist = new TDistribution(df_residuals);
+			pvalues[j] = 2 * (1.0 - tDist.cumulativeProbability(Math.abs(tStatistic))); // Two-tailed p-value
+		}
+
+		// return max of pvalues
+		return Arrays.stream(pvalues).max().getAsDouble();
+	}
+
 	/**
 	 * Constructor.
 	 *
@@ -166,6 +188,10 @@ public class LinearModel implements DataFrameRegression {
 		this.b = b;
 		this.bias = predictors[0].equals("Intercept");
 
+		int df_model = w.length;
+		int df_residuals = y.length - df_model;
+		df = df_residuals;
+
 		int n = X.nrow();
 		fittedValues = new double[n];
 		Arrays.fill(fittedValues, b);
@@ -181,51 +207,35 @@ public class LinearModel implements DataFrameRegression {
 			TSS += MathEx.pow2(y[i] - ybar);
 		}
 
-		error = Math.sqrt(RSS / (n - p));
-		df = n - p;
-
 		RSquared = 1.0 - RSS / TSS;
-		adjustedRSquared = 1.0 - ((1 - RSquared) * (n - 1) / (n - p));
 
-		F = (TSS - RSS) * (n - p) / (RSS * (p - 1));
-		int df1 = p - 1;
-		int df2 = n - p;
+		// Standard error of the residuals
+		error = Math.sqrt(RSS / df_residuals);
+
+		// adjusted R-squared
+		adjustedRSquared = 1.0 - ((1 - RSquared) * (n - 1) / df_residuals);
+
+		// F-statistic calculation
+		double MSR = (TSS - RSS) / df_model;
+		double MSE = RSS / df_residuals;
+		F = MSR / MSE;
+
+		int df1 = df_model; // Degrees of freedom for the model
+		int df2 = df_residuals; // Degrees of freedom for the residuals
 
 		if (df2 > 0 && F > 0.0) {
-			// pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 /
-			// (df2 + df1 * F));
-			if (df1 > 0) {
-				FDistribution fDist = new FDistribution(df1, df2);
-				// The cumulative probability for the F-distribution gives the left tail,
-				// so we subtract from 1 to get the right tail, which is the p-value
-				pvalue = 1.0 - fDist.cumulativeProbability(F);
-			} else {
-				// Additional calculations for the t-statistic and p-value
-				double seCoefficient; // Standard error of the coefficient
-				double tStatistic; // T-statistic for the coefficient
-
-				// Assuming `X` is a matrix with columns as predictors and `w[0]` as the
-				// coefficient of interest
-				// Calculate the standard error of the coefficient. This requires the variance
-				// of the residuals and the sum of squares of the predictor (X).
-				double sumX2 = 0;
-				for (int i = 0; i < X.nrow(); i++) {
-					double xi = X.get(i, 0); // Assuming the predictor of interest is in the first column
-					sumX2 += xi * xi;
-				}
-				seCoefficient = Math.sqrt(RSS / (n - p - 1)) / Math.sqrt(sumX2);
-
-				// Calculate the t-statistic for the coefficient
-				tStatistic = w[0] / seCoefficient;
-
-				// Compute the p-value using the t-distribution
-				TDistribution tDist = new TDistribution(df2);
-				pvalue = 2 * (1.0 - tDist.cumulativeProbability(Math.abs(tStatistic))); // Two-tailed p-value
-			}
+			// if (df1 > 0) {
+			// // Compute the p-value using the F-distribution
+			// FDistribution fDist = new FDistribution(df1, df2);
+			// // The cumulative probability for the F-distribution gives the left tail,
+			// // so we subtract from 1 to get the right tail, which is the p-value
+			// pvalue = 1.0 - fDist.cumulativeProbability(F);
+			// } else {
+			// pvalue = computeMaxPvalue(y, X, w, RSS, df_residuals);
+			// }
+			pvalue = computeMaxPvalue(y, X, w, RSS, df_residuals);
 		} else {
-			// String msg = F <= 0.0 ? "R2 is not positive" : "the linear system is
-			// under-determined";
-			// logger.warn("Skip calculating p-value: {}.", msg);
+			// Handle edge cases where F is non-positive or df2 is zero
 			pvalue = Double.NaN;
 		}
 	}
