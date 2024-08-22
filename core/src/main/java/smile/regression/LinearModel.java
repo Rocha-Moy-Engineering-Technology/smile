@@ -217,6 +217,9 @@ public class LinearModel implements DataFrameRegression {
 
 		// F-statistic calculation
 		F = (RSquared / df_model) / ((1 - RSquared) / df_residuals);
+		// System.out.println("F: " + F);
+		// System.out.println("df_model: " + df_model);
+		// System.out.println("df_residuals: " + df_residuals);
 
 		if (Double.isInfinite(F)) {
 			pvalue = 0.0;
