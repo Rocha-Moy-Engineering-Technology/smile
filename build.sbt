@@ -1,7 +1,7 @@
 name := "smile"
 
 // lazy val scala213 = "2.13.11"
-lazy val scala3 = "3.5.1"
+lazy val scala3 = "3.5.2"
 // lazy val supportedScalaVersions = List(scala213, scala3)
 lazy val supportedScalaVersions = List(scala3)
 
@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "3.0.2-RMTC-0.9.23",
+  version := "3.0.2-RMTC-0.9.24",
 
   Test / parallelExecution := false,
   autoAPIMappings := true,
@@ -131,6 +131,9 @@ lazy val root = project.in(file("."))
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, shell, plot)
   )
   .aggregate(core, base, mkl, nlp, plot, json, scala, shell)
+  .settings(
+    (Test / aggregate) in testOnly := false
+  )
 
 lazy val base = project.in(file("base")).settings(java8Settings: _*)
 

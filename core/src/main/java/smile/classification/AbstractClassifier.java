@@ -21,7 +21,7 @@ import smile.data.vector.BaseVector;
 import smile.util.IntSet;
 
 /**
- * Abstract base class of classifiers.
+ * Object base class of classifiers.
  *
  * @param <T> the type of input object
  *

@@ -123,7 +123,7 @@ case class Vars(x: Scalar*) extends Vector {
   }
 }
 
-/** Abstract vector variable */
+/** Object vector variable */
 case class VectorVar(symbol: String, size: IntScalar = IntConst("n")) extends Vector {
   override def toString: String = symbol
 

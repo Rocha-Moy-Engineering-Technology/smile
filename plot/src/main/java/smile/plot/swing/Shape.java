@@ -20,7 +20,7 @@ package smile.plot.swing;
 import java.awt.Color;
 
 /**
- * Abstract rendering object in a PlotCanvas.
+ * Object rendering object in a PlotCanvas.
  *
  * @author Haifeng Li
  */

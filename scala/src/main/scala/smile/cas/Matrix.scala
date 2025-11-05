@@ -91,7 +91,7 @@ case class ConstMatrix(symbol: String, size: (IntScalar, IntScalar) = (IntConst(
   }
 }
 
-/** Abstract matrix variable */
+/** Object matrix variable */
 case class MatrixVar(symbol: String, size: (IntScalar, IntScalar) = (IntConst("m"), IntConst("n"))) extends Matrix {
   override def toString: String = symbol
 

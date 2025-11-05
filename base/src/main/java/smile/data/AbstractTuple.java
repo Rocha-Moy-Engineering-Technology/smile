@@ -18,7 +18,7 @@
 package smile.data;
 
 /**
- * Abstract tuple base class.
+ * Object tuple base class.
  *
  * @author Haifeng Li
  */

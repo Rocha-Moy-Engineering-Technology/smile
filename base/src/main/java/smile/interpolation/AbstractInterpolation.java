@@ -18,8 +18,8 @@
 package smile.interpolation;
 
 /**
- * Abstract base class of one-dimensional interpolation methods.
- * 
+ * Object base class of one-dimensional interpolation methods.
+ *
  * @author Haifeng Li
  */
 public abstract class AbstractInterpolation implements Interpolation {
