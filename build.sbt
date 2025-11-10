@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "3.0.2-RMTC-0.9.24",
+  version := "3.0.2-RMTC-1",
 
   Test / parallelExecution := false,
   autoAPIMappings := true,
@@ -122,9 +122,6 @@ lazy val scalaSettings = commonSettings ++ Seq(
   ),
 )
 
-// lazy val depedencyGraph =
-//   "compile->compile;compile->test;test->compile;test->test"
-
 lazy val root = project.in(file("."))
   .settings(commonSettings: _*)
   .enablePlugins(JavaUnidocPlugin)
@@ -133,14 +130,6 @@ lazy val root = project.in(file("."))
   .settings(
     JavaUnidoc / unidoc / unidocProjectFilter := inAnyProject -- inProjects(json, scala, shell, plot)
   )
-  // .dependsOn(core % depedencyGraph)
-  // .dependsOn(base % depedencyGraph)
-  // .dependsOn(mkl % depedencyGraph)
-  // .dependsOn(nlp % depedencyGraph)
-  // .dependsOn(plot % depedencyGraph)
-  // .dependsOn(json % depedencyGraph)
-  // .dependsOn(scala % depedencyGraph)
-  // .dependsOn(shell % depedencyGraph)
   .aggregate(core, base, mkl, nlp, plot, json, scala, shell)
   .settings(
     (Test / aggregate) in testOnly := false
